@@ -50,6 +50,17 @@ func (s *Sudoku) String() string {
 	return res
 }
 
+func (s *Sudoku) IsEqual(other *Sudoku) bool {
+	for i, row := range s {
+		for j, v := range row {
+			if v != other[i][j] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (s *Sudoku) CellIsEmpty(i int, j int) bool {
 	return s[i][j] == 0
 }
@@ -123,11 +134,11 @@ func (s *Sudoku) NextEmptyPosition(i int, j int) (int, int, error) {
 	var nj int
 
 	if i > 8 || j > 8 || i < 0 || j < 0 {
-		return 0, 0, errors.New("Position out of range")
+		return 0, 0, errors.New("position out of range")
 	}
 
 	if i == 8 && j == 8 {
-		return 0, 0, errors.New("Last Position reached")
+		return 0, 0, errors.New("last position reached")
 	}
 
 	pos := i*9 + j
@@ -147,11 +158,11 @@ func (s *Sudoku) PreviousEmptyPosition(i int, j int) (int, int, error) {
 	var nj int
 
 	if i > 8 || j > 8 || i < 0 || j < 0 {
-		return 0, 0, errors.New("Position out of range")
+		return 0, 0, errors.New("position out of range")
 	}
 
 	if i == 0 && j == 0 {
-		return 0, 0, errors.New("First Position reached")
+		return 0, 0, errors.New("first position reached")
 	}
 
 	pos := i*9 + j

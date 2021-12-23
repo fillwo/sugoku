@@ -13,18 +13,7 @@ func main() {
 	s := sudoku.LoadFromJsonFile("sudoku1.json")
 	sudokuSolver := solver.NewSolver(s)
 
-	counter := 0
+	result := sudokuSolver.Solve()
 
-	for true {
-		counter++
-		res, err := sudokuSolver.SolveStep()
-		if err != nil {
-			fmt.Printf("res: %v\n", res)
-			fmt.Printf("err: %v\n", err)
-			break
-		}
-	}
-	fmt.Printf("position: %v\n", sudokuSolver.Position)
-	fmt.Println("counter:", counter)
-	fmt.Println(sudokuSolver.Current)
+	fmt.Printf("%v", result)
 }

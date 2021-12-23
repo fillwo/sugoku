@@ -9,6 +9,13 @@ type SPosition struct {
 	J int
 }
 
+type SolveResult struct {
+	Sudoku     *sudoku.Sudoku
+	Solution   *sudoku.Sudoku
+	Iterations int
+	Success    bool
+}
+
 type Solver struct {
 	Sudoku   *sudoku.Sudoku
 	Current  *sudoku.Sudoku
@@ -78,4 +85,41 @@ func (s *Solver) SolveStep() (bool, error) {
 	s.Position.I = ni
 	s.Position.J = nj
 	return false, nil
+}
+
+func (s *Solver) Solve() SolveResult {
+	var res bool
+	var err error
+	var solution sudoku.Sudoku
+	counter := 0
+
+	for true {
+		counter++
+		res, err = s.SolveStep()
+		if err != nil {
+			break
+		}
+	}
+	// successfully solved
+	if res {
+		// copy solution
+		for i, row := range s.Current {
+			for j, v := range row {
+				solution[i][j] = v
+			}
+		}
+		return SolveResult{
+			Sudoku:     s.Sudoku,
+			Solution:   &solution,
+			Iterations: counter,
+			Success:    res,
+		}
+	} else {
+		// could not solve
+		return SolveResult{
+			Sudoku:     s.Sudoku,
+			Iterations: counter,
+			Success:    res,
+		}
+	}
 }
