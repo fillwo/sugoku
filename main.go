@@ -15,5 +15,9 @@ func main() {
 
 	result := sudokuSolver.Solve()
 
-	fmt.Printf("%v", result)
+	fmt.Printf("%v\n", result)
+
+	fmt.Println("check if solution is unique:")
+
+	fmt.Println(result.IsOnlySolution())
 }

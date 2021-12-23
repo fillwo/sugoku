@@ -153,3 +153,23 @@ func TestPreviousEmptyPosition(t *testing.T) {
 		t.Fatalf("this is supposed to fail")
 	}
 }
+
+func TestLastEmptyPosition(t *testing.T) {
+	s := LoadFromJsonFile("../sudoku1.json")
+	li, lj := s.LastEmptyPosition()
+	if li != 8 {
+		t.Fatalf("expected 8")
+	}
+	if lj != 8 {
+		t.Fatalf("expected 8")
+	}
+
+	s[8][8] = 5
+	li, lj = s.LastEmptyPosition()
+	if li != 8 {
+		t.Fatalf("expected 8")
+	}
+	if lj != 3 {
+		t.Fatalf("expected 3")
+	}
+}

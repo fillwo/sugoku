@@ -176,3 +176,19 @@ func (s *Sudoku) PreviousEmptyPosition(i int, j int) (int, int, error) {
 		return s.PreviousEmptyPosition(ni, nj)
 	}
 }
+
+func (s *Sudoku) LastEmptyPosition() (int, int) {
+	var li int
+	var lj int
+
+	for i, row := range s {
+		for j, v := range row {
+			if v == 0 {
+				li = i
+				lj = j
+			}
+		}
+	}
+
+	return li, lj
+}

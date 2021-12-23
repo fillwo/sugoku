@@ -123,3 +123,33 @@ func (s *Solver) Solve() SolveResult {
 		}
 	}
 }
+
+func (sr *SolveResult) IsOnlySolution() bool {
+	var current sudoku.Sudoku
+
+	for i, row := range sr.Solution {
+		for j, v := range row {
+			current[i][j] = v
+		}
+	}
+
+	li, lj := sr.Sudoku.LastEmptyPosition()
+	current[li][lj] = 0
+
+	li, lj, err := sr.Sudoku.PreviousEmptyPosition(li, lj)
+	if err != nil {
+		panic(err)
+	}
+
+	pos := SPosition{li, lj}
+
+	solver := Solver{
+		Sudoku:   sr.Sudoku,
+		Current:  &current,
+		Position: pos,
+	}
+
+	result := solver.Solve()
+
+	return !result.Success
+}
