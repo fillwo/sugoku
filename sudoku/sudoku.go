@@ -50,6 +50,18 @@ func (s *Sudoku) String() string {
 	return res
 }
 
+func (s *Sudoku) SaveToJsonFile(filepath string) error {
+	if data, err := json.Marshal(*s); err != nil {
+		return err
+	} else {
+		if err := os.WriteFile(filepath, data, 0644); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	}
+}
+
 func (s *Sudoku) IsEqual(other *Sudoku) bool {
 	for i, row := range s {
 		for j, v := range row {
