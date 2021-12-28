@@ -17,9 +17,10 @@ type SolveResult struct {
 }
 
 type Solver struct {
-	Sudoku   *sudoku.Sudoku
-	Current  *sudoku.Sudoku
-	Position SPosition
+	Sudoku       *sudoku.Sudoku
+	EasySolution *sudoku.Sudoku
+	Current      *sudoku.Sudoku
+	Position     SPosition
 }
 
 func valuesBiggerThan(arr []int, biggerThan int) []int {
@@ -33,27 +34,37 @@ func valuesBiggerThan(arr []int, biggerThan int) []int {
 }
 
 func NewSolver(s *sudoku.Sudoku) Solver {
-	var tmp sudoku.Sudoku
+	return Solver{
+		Sudoku:       s,
+		EasySolution: s.DeepCopy(),
+		Current:      s.DeepCopy(),
+		Position:     SPosition{0, 0},
+	}
+}
 
-	for i, row := range s {
-		for j, v := range row {
-			tmp[i][j] = v
+func (s *Solver) EasyStep() bool {
+	var numChanges int
+
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			if s.EasySolution[i][j] == 0 {
+				candidates := s.EasySolution.GetCandidates(i, j)
+				if len(candidates) == 1 {
+					s.EasySolution[i][j] = candidates[0]
+					numChanges++
+				}
+			}
 		}
 	}
-
-	return Solver{
-		Sudoku:   s,
-		Current:  &tmp,
-		Position: SPosition{0, 0},
-	}
+	return numChanges > 0
 }
 
 func (s *Solver) SolveStep() (bool, error) {
 	i := s.Position.I
 	j := s.Position.J
 	// if cell is not empty move on to the next
-	if !s.Sudoku.CellIsEmpty(i, j) {
-		ni, nj, err := s.Sudoku.NextEmptyPosition(i, j)
+	if !s.EasySolution.CellIsEmpty(i, j) {
+		ni, nj, err := s.EasySolution.NextEmptyPosition(i, j)
 		if err != nil {
 			return false, err
 		}
@@ -67,7 +78,7 @@ func (s *Solver) SolveStep() (bool, error) {
 	// cadidates exists
 	if len(candidates) > 0 {
 		s.Current[i][j] = candidates[0]
-		ni, nj, err := s.Sudoku.NextEmptyPosition(i, j)
+		ni, nj, err := s.EasySolution.NextEmptyPosition(i, j)
 		if err != nil {
 			return true, err
 		}
@@ -76,7 +87,7 @@ func (s *Solver) SolveStep() (bool, error) {
 		return false, nil
 	}
 	// no candidates found - need to go back
-	ni, nj, err := s.Sudoku.PreviousEmptyPosition(i, j)
+	ni, nj, err := s.EasySolution.PreviousEmptyPosition(i, j)
 	// deleting current value
 	s.Current[i][j] = 0
 	if err != nil {
@@ -87,13 +98,32 @@ func (s *Solver) SolveStep() (bool, error) {
 	return false, nil
 }
 
-func (s *Solver) Solve() SolveResult {
+func (s *Solver) SolveWithOption(tryEasy bool) SolveResult {
 	var res bool
 	var err error
-	var solution sudoku.Sudoku
+
 	counter := 0
 
-	for true {
+	// try easy solution first (not when checking for unique solution)
+	if tryEasy {
+		for {
+			counter++
+			if ok := s.EasyStep(); !ok {
+				break
+			}
+		}
+		if s.EasySolution.IsSolved() {
+			return SolveResult{
+				Sudoku:     s.Sudoku,
+				Solution:   s.EasySolution.DeepCopy(),
+				Iterations: counter,
+				Success:    true,
+			}
+		}
+	}
+
+	// solution using backtracing
+	for {
 		counter++
 		res, err = s.SolveStep()
 		if err != nil {
@@ -102,15 +132,9 @@ func (s *Solver) Solve() SolveResult {
 	}
 	// successfully solved
 	if res {
-		// copy solution
-		for i, row := range s.Current {
-			for j, v := range row {
-				solution[i][j] = v
-			}
-		}
 		return SolveResult{
 			Sudoku:     s.Sudoku,
-			Solution:   &solution,
+			Solution:   s.Current.DeepCopy(),
 			Iterations: counter,
 			Success:    res,
 		}
@@ -122,6 +146,10 @@ func (s *Solver) Solve() SolveResult {
 			Success:    res,
 		}
 	}
+}
+
+func (s *Solver) Solve() SolveResult {
+	return s.SolveWithOption(true)
 }
 
 func (sr *SolveResult) IsOnlySolution() bool {
@@ -144,12 +172,13 @@ func (sr *SolveResult) IsOnlySolution() bool {
 	pos := SPosition{li, lj}
 
 	solver := Solver{
-		Sudoku:   sr.Sudoku,
-		Current:  &current,
-		Position: pos,
+		Sudoku:       sr.Sudoku,
+		Current:      &current,
+		EasySolution: sr.Sudoku.DeepCopy(),
+		Position:     pos,
 	}
 
-	result := solver.Solve()
+	result := solver.SolveWithOption(false)
 
 	return !result.Success
 }

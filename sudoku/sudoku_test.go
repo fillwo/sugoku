@@ -173,3 +173,14 @@ func TestLastEmptyPosition(t *testing.T) {
 		t.Fatalf("expected 3")
 	}
 }
+
+func TestIsSolved(t *testing.T) {
+	s := LoadFromJsonFile("../sudoku1.json")
+	if s.IsSolved() {
+		t.Errorf("sudoku should not be solved")
+	}
+	s = LoadFromJsonFile("../solution1.json")
+	if !s.IsSolved() {
+		t.Errorf("sudoku should be solved")
+	}
+}

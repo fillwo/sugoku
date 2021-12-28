@@ -204,3 +204,25 @@ func (s *Sudoku) LastEmptyPosition() (int, int) {
 
 	return li, lj
 }
+
+func (s *Sudoku) IsSolved() bool {
+	for _, row := range s {
+		for _, v := range row {
+			if v == 0 {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (s *Sudoku) DeepCopy() *Sudoku {
+	var newSudoku Sudoku
+
+	for i, row := range s {
+		for j, v := range row {
+			newSudoku[i][j] = v
+		}
+	}
+	return &newSudoku
+}
