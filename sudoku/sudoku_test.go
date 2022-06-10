@@ -184,3 +184,27 @@ func TestIsSolved(t *testing.T) {
 		t.Errorf("sudoku should be solved")
 	}
 }
+
+func TestTransformations(t *testing.T) {
+	original := LoadFromJsonFile("../sudoku1.json")
+	topDown := original.NewTopDownSwitch()
+	leftRight := original.NewLeftRightSwitch()
+	full := original.NewFullSwitch()
+
+	if !original.IsEqual(topDown.NewTopDownSwitch()) {
+		t.Errorf("applying 2 topDown switches should yield original")
+	}
+
+	if !original.IsEqual(leftRight.NewLeftRightSwitch()) {
+		t.Errorf("applying 2 leftRight switches should yield original")
+	}
+
+	if !original.IsEqual(full.NewFullSwitch()) {
+		t.Errorf("applying 2 full switches should yield original")
+	}
+
+	if !original.NewLeftRightSwitch().NewTopDownSwitch().IsEqual(original.NewTopDownSwitch().NewLeftRightSwitch()) {
+		t.Errorf("topdown - leftright should be equal to leftright topdown")
+	}
+
+}

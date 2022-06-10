@@ -21,6 +21,7 @@ type Solver struct {
 	EasySolution *sudoku.Sudoku
 	Current      *sudoku.Sudoku
 	Position     SPosition
+	STrafo       func(_ *sudoku.Sudoku) *sudoku.Sudoku
 }
 
 func valuesBiggerThan(arr []int, biggerThan int) []int {
@@ -36,9 +37,10 @@ func valuesBiggerThan(arr []int, biggerThan int) []int {
 func NewSolver(s *sudoku.Sudoku) Solver {
 	return Solver{
 		Sudoku:       s,
-		EasySolution: s.DeepCopy(),
-		Current:      s.DeepCopy(),
+		EasySolution: s.FindBestSwitch()(s),
+		Current:      s.FindBestSwitch()(s),
 		Position:     SPosition{0, 0},
+		STrafo:       s.FindBestSwitch(),
 	}
 }
 
@@ -115,7 +117,7 @@ func (s *Solver) SolveWithOption(tryEasy bool) SolveResult {
 		if s.EasySolution.IsSolved() {
 			return SolveResult{
 				Sudoku:     s.Sudoku,
-				Solution:   s.EasySolution.DeepCopy(),
+				Solution:   s.STrafo(s.EasySolution),
 				Iterations: counter,
 				Success:    true,
 			}
@@ -134,7 +136,7 @@ func (s *Solver) SolveWithOption(tryEasy bool) SolveResult {
 	if res {
 		return SolveResult{
 			Sudoku:     s.Sudoku,
-			Solution:   s.Current.DeepCopy(),
+			Solution:   s.STrafo(s.Current),
 			Iterations: counter,
 			Success:    res,
 		}
@@ -153,13 +155,7 @@ func (s *Solver) Solve() SolveResult {
 }
 
 func (sr *SolveResult) IsOnlySolution() bool {
-	var current sudoku.Sudoku
-
-	for i, row := range sr.Solution {
-		for j, v := range row {
-			current[i][j] = v
-		}
-	}
+	current := *sr.Solution.DeepCopy()
 
 	li, lj := sr.Sudoku.LastEmptyPosition()
 	current[li][lj] = 0
@@ -176,6 +172,7 @@ func (sr *SolveResult) IsOnlySolution() bool {
 		Current:      &current,
 		EasySolution: sr.Sudoku.DeepCopy(),
 		Position:     pos,
+		STrafo:       (*sudoku.Sudoku).DeepCopy,
 	}
 
 	result := solver.SolveWithOption(false)

@@ -226,3 +226,94 @@ func (s *Sudoku) DeepCopy() *Sudoku {
 	}
 	return &newSudoku
 }
+
+func (s *Sudoku) NewTopDownSwitch() *Sudoku {
+	var result Sudoku
+	// top row to bottom row
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 9; j++ {
+			result[i+6][j] = s[i][j]
+		}
+	}
+	// keep middle row
+	for i := 3; i < 6; i++ {
+		for j := 0; j < 9; j++ {
+			result[i][j] = s[i][j]
+		}
+	}
+	// bottom row to top row
+	for i := 6; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			result[i-6][j] = s[i][j]
+		}
+	}
+	return &result
+}
+
+func (s *Sudoku) NewLeftRightSwitch() *Sudoku {
+	var result Sudoku
+	// left column to right column
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 3; j++ {
+			result[i][j+6] = s[i][j]
+		}
+	}
+	// middle columns stays
+	for i := 0; i < 9; i++ {
+		for j := 3; j < 6; j++ {
+			result[i][j] = s[i][j]
+		}
+	}
+	// right column to left column
+	for i := 0; i < 9; i++ {
+		for j := 6; j < 9; j++ {
+			result[i][j-6] = s[i][j]
+		}
+	}
+	return &result
+}
+
+func (s *Sudoku) NewFullSwitch() *Sudoku {
+	s1 := s.NewTopDownSwitch()
+	s2 := s1.NewLeftRightSwitch()
+	return s2
+}
+
+func (s *Sudoku) SolveScore() (score int) {
+	for i, row := range s {
+		for j, v := range row {
+			idx := i*9 + j
+			if v > 0 {
+				score += (80 - idx)
+			}
+		}
+	}
+	return score
+}
+
+func (s *Sudoku) SwitchScore() (original int, topDown int, leftRight int, full int) {
+	td := s.NewTopDownSwitch()
+	lr := s.NewLeftRightSwitch()
+	fu := s.NewFullSwitch()
+	return s.SolveScore(), td.SolveScore(), lr.SolveScore(), fu.SolveScore()
+}
+
+func (s *Sudoku) FindBestSwitch() (switchFunc func(_ *Sudoku) *Sudoku) {
+	orig := s.SolveScore()
+	topdown := s.NewTopDownSwitch().SolveScore()
+	leftright := s.NewLeftRightSwitch().SolveScore()
+	full := s.NewFullSwitch().SolveScore()
+
+	if full >= leftright && full >= topdown && full >= orig {
+		return (*Sudoku).NewFullSwitch
+	}
+
+	if leftright >= full && leftright >= topdown && leftright >= orig {
+		return (*Sudoku).NewLeftRightSwitch
+	}
+
+	if topdown >= full && topdown >= leftright && topdown >= orig {
+		return (*Sudoku).NewTopDownSwitch
+	}
+	return (*Sudoku).DeepCopy
+}
